@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>打开大众点评外卖</title>
     <style>
-        /* 保持原有样式，仅调整提示层文本 */
         * {
             margin: 0;
             padding: 0;
@@ -94,6 +93,16 @@
        .wxtip-txt {
             color: white;
             padding-top: 50px;
+            font-size: 16px;
+        }
+       .scheme-link {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 14px;
+            word-break: break-all;
+            display: none;
         }
     </style>
 </head>
@@ -101,24 +110,30 @@
     <div class="container">
         <div class="logo">大众点评</div>
         <h1>打开大众点评外卖</h1>
-        <p>点击下方按钮，查看外卖详情</p >
-        <button id="openBtn">打开大众点评</button>
+        <p>点击下方按钮，获取唤起链接</p >
+        <button id="openBtn">获取唤起链接</button>
+        <div class="scheme-link" id="schemeLink"></div>
         <div id="message">请先下载大众点评应用</div>
-        <!-- 安卓微信专用提示层 -->
+        <!-- 苹果微信提示层 -->
+        <div class="wxtip" id="iosWeixinTip">
+            <div class="wxtip-icon"></div>
+            <p class="wxtip-txt">点击右上角<br/>选择在浏览器中打开<br/>即可唤起大众点评</p >
+        </div>
+        <!-- 安卓微信提示层 -->
         <div class="wxtip" id="androidWeixinTip">
             <div class="wxtip-icon"></div>
-            <p class="wxtip-txt">点击右上角<br/>选择在浏览器中打开</p >
+            <p class="wxtip-txt">点击右上角<br/>选择在浏览器中打开<br/>再点击按钮唤起</p >
         </div>
     </div>
 
     <script>
-        // 判断环境
-        var ua = navigator.userAgent;
-        var isWeixin = /MicroMessenger/i.test(ua);
-        var isIOS = /iPhone|iPad|iPod/i.test(ua);
-        var isAndroid = /Android/i.test(ua);
+        // 环境判断
+        const ua = navigator.userAgent;
+        const isWeixin = /MicroMessenger/i.test(ua);
+        const isIOS = /iPhone|iPad|iPod/i.test(ua);
+        const isAndroid = /Android/i.test(ua);
 
-        // 获取URL中的id参数
+        // 获取URL参数
         function getPoiId() {
             const url = window.location.href;
             const regex = new RegExp('[?&]id=([^&#]*)');
@@ -132,45 +147,53 @@
             poi_id: '-100'
         };
 
-        // 生成唤起链接并跳转
-        function openDianping() {
+        // 生成唤起协议链接
+        function getScheme() {
             const poiId = getPoiId();
+            if (!poiId) return null;
+            
+            return `dianping://waimai.dianping.com/takeout/foods?` +
+                `poi_id_str=${poiId}&` +
+                `allowance_alliance_scenes=${fixedParams.allowance_alliance_scenes}&` +
+                `poi_id=${fixedParams.poi_id}`;
+        }
 
-            if (!poiId) {
+        // 按钮点击事件
+        document.getElementById('openBtn').addEventListener('click', () => {
+            const scheme = getScheme();
+            if (!scheme) {
                 document.getElementById('message').textContent = '参数错误，请检查链接';
                 document.getElementById('message').style.display = 'block';
                 return;
             }
 
-            // 拼接唤起协议
-            const scheme = `dianping://waimai.dianping.com/takeout/foods?` +
-                `poi_id_str=${poiId}&` +
-                `allowance_alliance_scenes=${fixedParams.allowance_alliance_scenes}&` +
-                `poi_id=${fixedParams.poi_id}`;
-
             if (isWeixin) {
+                // 微信环境：显示对应提示
                 if (isIOS) {
-                    // iOS微信环境：直接尝试唤起（利用iOS微信对部分协议的支持）
-                    window.location.href = scheme;
-                    // 唤起失败时显示提示
-                    setTimeout(() => {
-                        document.getElementById('androidWeixinTip').style.display = 'block';
-                    }, 1500);
+                    // 苹果微信：提示用浏览器打开，并展示协议链接
+                    document.getElementById('iosWeixinTip').style.display = 'block';
+                    document.getElementById('schemeLink').textContent = scheme;
+                    document.getElementById('schemeLink').style.display = 'block';
                 } else {
-                    // 安卓微信环境：提示用浏览器打开
+                    // 安卓微信：常规浏览器引导
                     document.getElementById('androidWeixinTip').style.display = 'block';
                 }
             } else {
-                // 非微信环境（无论安卓/iOS）直接跳转
+                // 非微信环境：直接唤起
                 window.location.href = scheme;
                 setTimeout(() => {
                     document.getElementById('message').style.display = 'block';
                 }, 3000);
             }
-        }
+        });
 
-        // 绑定按钮点击事件
-        document.getElementById('openBtn').addEventListener('click', openDianping);
+        // 关闭提示层
+        document.getElementById('iosWeixinTip').addEventListener('click', function() {
+            this.style.display = 'none';
+        });
+        document.getElementById('androidWeixinTip').addEventListener('click', function() {
+            this.style.display = 'none';
+        });
     </script>
 </body>
 </html>
