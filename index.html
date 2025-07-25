@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,6 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             min-height: 100vh;
             display: flex;
@@ -20,12 +22,14 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 20px;
         }
-        .container {
+
+       .container {
             text-align: center;
             max-width: 400px;
             width: 100%;
         }
-        .logo {
+
+       .logo {
             width: 100px;
             height: 100px;
             margin: 0 auto 30px;
@@ -38,16 +42,19 @@
             font-size: 24px;
             font-weight: bold;
         }
+
         h1 {
             color: #333;
             margin-bottom: 15px;
             font-size: 24px;
         }
+
         p {
             color: #666;
             margin-bottom: 30px;
             font-size: 16px;
         }
+
         #openBtn {
             background-color: #ff7043;
             color: white;
@@ -61,17 +68,48 @@
             max-width: 300px;
             transition: background-color 0.3s;
         }
+
         #openBtn:hover {
             background-color: #f4511e;
         }
+
         #message {
             margin-top: 20px;
             color: #d32f2f;
             font-size: 16px;
             display: none;
         }
+
+        /* 添加提示样式 */
+       .wxtip {
+            background: rgba(0, 0, 0, 0.8);
+            text-align: center;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            z - index: 998;
+            display: none;
+        }
+
+       .wxtip - icon {
+            width: 52px;
+            height: 67px;
+            background: url(weixin - tip.png) no - repeat;
+            display: block;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+       .wxtip - txt {
+            color: white;
+            padding - top: 50px;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="logo">大众点评</div>
@@ -79,15 +117,24 @@
         <p>点击下方按钮，查看外卖详情</p >
         <button id="openBtn">打开大众点评</button>
         <div id="message">请先下载大众点评应用</div>
+        <!-- 添加提示元素 -->
+        <div class="wxtip" id="JweixinTip">
+            <div class="wxtip - icon"></div>
+            <p class="wxtip - txt">点击右上角<br/>选择在浏览器中打开</p >
+        </div>
     </div>
 
     <script>
+        // 判断是否在微信环境
+        var ua = navigator.userAgent;
+        var isWeixin = /MicroMessenger/i.test(ua);
+
         // 获取URL中的id参数（对应poi_id_str）
         function getPoiId() {
             const url = window.location.href;
             const regex = new RegExp('[?&]id=([^&#]*)');
             const results = regex.exec(url);
-            return results ? decodeURIComponent(results[1]) : null;
+            return results? decodeURIComponent(results[1]) : null;
         }
 
         // 固定参数（不会变化的部分）
@@ -99,7 +146,7 @@
         // 生成唤起链接
         function openDianping() {
             const poiId = getPoiId();
-            
+
             // 检查是否存在必要的id参数
             if (!poiId) {
                 document.getElementById('message').textContent = '参数错误，请检查链接';
@@ -109,23 +156,15 @@
 
             // 拼接完整的唤起协议（通用格式，安卓iOS均支持）
             const scheme = `dianping://waimai.dianping.com/takeout/foods?` +
-                          `poi_id_str=${poiId}&` +
-                          `allowance_alliance_scenes=${fixedParams.allowance_alliance_scenes}&` +
-                          `poi_id=${fixedParams.poi_id}`;
+                `poi_id_str=${poiId}&` +
+                `allowance_alliance_scenes=${fixedParams.allowance_alliance_scenes}&` +
+                `poi_id=${fixedParams.poi_id}`;
 
-            // 微信环境处理
-            if (navigator.userAgent.includes('MicroMessenger')) {
-                const startTime = Date.now();
-                window.location.href = scheme;
-                
-                // 2秒后判断是否打开成功
-                setTimeout(() => {
-                    if (Date.now() - startTime < 2000) {
-                        document.getElementById('message').style.display = 'block';
-                    }
-                }, 2000);
+            if (isWeixin) {
+                // 在微信中显示提示层
+                document.getElementById('JweixinTip').style.display = 'block';
             } else {
-                // 非微信环境处理
+                // 非微信环境直接跳转
                 window.location.href = scheme;
                 setTimeout(() => {
                     document.getElementById('message').style.display = 'block';
@@ -137,4 +176,5 @@
         document.getElementById('openBtn').addEventListener('click', openDianping);
     </script>
 </body>
+
 </html>
