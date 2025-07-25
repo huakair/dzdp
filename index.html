@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>打开大众点评外卖</title>
     <style>
+        /* 保持原有样式不变 */
         * {
             margin: 0;
             padding: 0;
@@ -104,15 +105,10 @@
         <p>点击下方按钮，查看外卖详情</p >
         <button id="openBtn">打开大众点评</button>
         <div id="message">请先下载大众点评应用</div>
-        <!-- 苹果微信提示层 -->
-        <div class="wxtip" id="iosWeixinTip">
+        <!-- 统一提示层（强调默认浏览器） -->
+        <div class="wxtip" id="browserTip">
             <div class="wxtip-icon"></div>
-            <p class="wxtip-txt">点击右上角<br/>选择在浏览器中打开<br/>将自动唤起大众点评</p >
-        </div>
-        <!-- 安卓微信提示层 -->
-        <div class="wxtip" id="androidWeixinTip">
-            <div class="wxtip-icon"></div>
-            <p class="wxtip-txt">点击右上角<br/>选择在浏览器中打开<br/>再点击按钮唤起</p >
+            <p class="wxtip-txt">点击右上角<br/>选择<strong>默认浏览器</strong>打开<br/>将自动唤起大众点评</p >
         </div>
     </div>
 
@@ -160,33 +156,23 @@
 
         // 页面加载时处理（非微信环境）
         if (!isWeixin) {
-            // 苹果用户：浏览器打开后自动传递协议并唤起
-            if (isIOS) {
-                setTimeout(launchApp, 800); // 延迟确保页面加载完成
-            }
-            // 安卓用户：保持点击按钮唤起
+            // 无论安卓/iOS，默认浏览器打开后自动唤起
+            setTimeout(launchApp, 800); // 延迟确保页面加载完成
         }
 
         // 按钮点击事件
         document.getElementById('openBtn').addEventListener('click', () => {
             if (isWeixin) {
-                // 微信环境：显示对应提示
-                if (isIOS) {
-                    document.getElementById('iosWeixinTip').style.display = 'block';
-                } else {
-                    document.getElementById('androidWeixinTip').style.display = 'block';
-                }
+                // 微信环境：统一提示用默认浏览器打开
+                document.getElementById('browserTip').style.display = 'block';
             } else {
-                // 非微信环境：安卓点击唤起，苹果已自动唤起（此处留按钮作为备用）
+                // 非微信环境：按钮作为备用唤起方式
                 launchApp();
             }
         });
 
         // 关闭提示层
-        document.getElementById('iosWeixinTip').addEventListener('click', function() {
-            this.style.display = 'none';
-        });
-        document.getElementById('androidWeixinTip').addEventListener('click', function() {
+        document.getElementById('browserTip').addEventListener('click', function() {
             this.style.display = 'none';
         });
     </script>
