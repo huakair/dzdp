@@ -95,29 +95,19 @@
             padding-top: 50px;
             font-size: 16px;
         }
-       .scheme-link {
-            margin-top: 15px;
-            padding: 10px;
-            background: #f0f0f0;
-            border-radius: 8px;
-            font-size: 14px;
-            word-break: break-all;
-            display: none;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo">大众点评</div>
         <h1>打开大众点评外卖</h1>
-        <p>点击下方按钮，获取唤起链接</p >
-        <button id="openBtn">获取唤起链接</button>
-        <div class="scheme-link" id="schemeLink"></div>
+        <p>点击下方按钮，查看外卖详情</p >
+        <button id="openBtn">打开大众点评</button>
         <div id="message">请先下载大众点评应用</div>
         <!-- 苹果微信提示层 -->
         <div class="wxtip" id="iosWeixinTip">
             <div class="wxtip-icon"></div>
-            <p class="wxtip-txt">点击右上角<br/>选择在浏览器中打开<br/>即可唤起大众点评</p >
+            <p class="wxtip-txt">点击右上角<br/>选择在浏览器中打开<br/>将自动唤起大众点评</p >
         </div>
         <!-- 安卓微信提示层 -->
         <div class="wxtip" id="androidWeixinTip">
@@ -147,43 +137,48 @@
             poi_id: '-100'
         };
 
-        // 生成唤起协议链接
+        // 生成唤起协议
         function getScheme() {
             const poiId = getPoiId();
             if (!poiId) return null;
-            
             return `dianping://waimai.dianping.com/takeout/foods?` +
                 `poi_id_str=${poiId}&` +
                 `allowance_alliance_scenes=${fixedParams.allowance_alliance_scenes}&` +
                 `poi_id=${fixedParams.poi_id}`;
         }
 
-        // 按钮点击事件
-        document.getElementById('openBtn').addEventListener('click', () => {
+        // 唤起应用
+        function launchApp() {
             const scheme = getScheme();
             if (!scheme) {
                 document.getElementById('message').textContent = '参数错误，请检查链接';
                 document.getElementById('message').style.display = 'block';
                 return;
             }
+            window.location.href = scheme;
+        }
 
+        // 页面加载时处理（非微信环境）
+        if (!isWeixin) {
+            // 苹果用户：浏览器打开后自动传递协议并唤起
+            if (isIOS) {
+                setTimeout(launchApp, 800); // 延迟确保页面加载完成
+            }
+            // 安卓用户：保持点击按钮唤起
+        }
+
+        // 按钮点击事件
+        document.getElementById('openBtn').addEventListener('click', () => {
             if (isWeixin) {
                 // 微信环境：显示对应提示
                 if (isIOS) {
-                    // 苹果微信：提示用浏览器打开，并展示协议链接
                     document.getElementById('iosWeixinTip').style.display = 'block';
-                    document.getElementById('schemeLink').textContent = scheme;
-                    document.getElementById('schemeLink').style.display = 'block';
                 } else {
-                    // 安卓微信：常规浏览器引导
                     document.getElementById('androidWeixinTip').style.display = 'block';
                 }
             } else {
-                // 非微信环境：直接唤起
-                window.location.href = scheme;
-                setTimeout(() => {
-                    document.getElementById('message').style.display = 'block';
-                }, 3000);
+                // 非微信环境：安卓点击唤起，苹果已自动唤起（此处留按钮作为备用）
+                launchApp();
             }
         });
 
